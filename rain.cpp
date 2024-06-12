@@ -1,5 +1,3 @@
-/* @luis-codex, 06.2024  */
-
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -10,12 +8,9 @@
 #include <iomanip>
 #include <sstream>
 
-//
-//  GLOBALS
-//
-
 bool userResized = false;
 bool slowerDrops = false;
+long frameDelay = 30; // Default frame delay in milliseconds
 
 class Drop {
 public:
@@ -26,8 +21,8 @@ public:
     char shape;
 
     Drop() {
-        w = randomInRange(0, COLS);
-        h = randomInRange(0, LINES);
+        w = randomInRange(0, COLS - 1);
+        h = randomInRange(0, LINES - 1);
 
         if (slowerDrops) {
             speed = randomInRange(1, 3);
@@ -43,7 +38,7 @@ public:
 
     void fall() {
         h += speed;
-        if (h >= LINES - 1)
+        if (h >= LINES)
             h = randomInRange(0, 10);
     }
 
@@ -139,8 +134,8 @@ void mssleep(long msec) {
 }
 
 void usage() {
-    std::cout << "Usage: rain\n";
-    std::cout << "No arguments supported yet. It's just rain, after all.\n";
+    std::cout << "Usage: rain [frame delay in milliseconds]\n";
+    std::cout << "No arguments required. Default frame delay is 30 ms.\n";
     std::cout << "Hit 'q' to exit.\n";
 }
 
@@ -159,10 +154,27 @@ void displayTime() {
     mvprintw(y, x, "%s", timeStr.c_str());
 }
 
+void handleResize(DropVector& drops) {
+    endwin();
+    refresh();
+    clear();
+    drops.resize(getNumOfDrops());
+    userResized = false;
+}
+
 int main(int argc, char **argv) {
-    if (argc != 1) {
+    if (argc > 2) {
         usage();
         return 0;
+    }
+
+    if (argc == 2) {
+        try {
+            frameDelay = std::stol(argv[1]);
+        } catch (const std::exception& e) {
+            usage();
+            return 1;
+        }
     }
 
     int key;
@@ -183,19 +195,17 @@ int main(int argc, char **argv) {
 
     while (true) {
         if (userResized) {
-            mssleep(90);
-            dropsTotal = getNumOfDrops();
-            drops.resize(dropsTotal);
-            userResized = false;
+            handleResize(drops);
+            dropsTotal = getNumOfDrops();  // Update the total number of drops
         }
 
-        for (int i = 0; i < dropsTotal; ++i) {
+        for (int i = 0; dropsTotal && i < dropsTotal; ++i) {
             drops.getAt(i).fall();
             drops.getAt(i).show();
         }
 
         displayTime();
-        mssleep(30);
+        mssleep(frameDelay);
 
         if ((key = wgetch(stdscr)) == 'q')
             break;

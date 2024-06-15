@@ -10,7 +10,7 @@
 
 bool userResized = false;
 bool slowerDrops = false;
-long frameDelay = 30; // Default frame delay in milliseconds
+long frameDelay = 80; 
 
 class Drop {
 public:
@@ -80,10 +80,6 @@ public:
     }
 };
 
-//
-//  FUNCTIONS - CURSES
-//
-
 void initCurses() {
     initscr();
     noecho();
@@ -135,7 +131,7 @@ void mssleep(long msec) {
 
 void usage() {
     std::cout << "Usage: rain [frame delay in milliseconds]\n";
-    std::cout << "No arguments required. Default frame delay is 30 ms.\n";
+    std::cout << "No arguments required. Default frame delay is 80 ms.\n";
     std::cout << "Hit 'q' to exit.\n";
 }
 
@@ -189,14 +185,10 @@ int main(int argc, char **argv) {
     int dropsTotal = getNumOfDrops();
     DropVector drops(dropsTotal);
 
-    //
-    //  DRAW-LOOP
-    //
-
     while (true) {
         if (userResized) {
             handleResize(drops);
-            dropsTotal = getNumOfDrops();  // Update the total number of drops
+            dropsTotal = getNumOfDrops();
         }
 
         for (int i = 0; dropsTotal && i < dropsTotal; ++i) {
